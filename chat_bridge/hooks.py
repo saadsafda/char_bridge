@@ -148,6 +148,11 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
+scheduler_events = {
+	# Re-embed products / policies / pages that changed since the last run (no-op if RAG is disabled).
+	"cron": {"*/30 * * * *": ["chat_bridge.chatbot.rag.scheduled_sync"]},
+}
+
 # scheduler_events = {
 # 	"all": [
 # 		"chat_bridge.tasks.all"

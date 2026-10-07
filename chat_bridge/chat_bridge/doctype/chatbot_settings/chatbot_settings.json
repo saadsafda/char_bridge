@@ -1,0 +1,344 @@
+{
+ "actions": [],
+ "creation": "2026-10-07 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "general_section",
+  "enabled",
+  "bot_name",
+  "default_company",
+  "column_break_general",
+  "welcome_message",
+  "suggested_questions",
+  "llm_section",
+  "provider",
+  "api_key",
+  "model",
+  "base_url",
+  "column_break_llm",
+  "max_tokens",
+  "effort",
+  "request_timeout",
+  "test_connection_button",
+  "behaviour_section",
+  "custom_instructions",
+  "fallback_message",
+  "column_break_behaviour",
+  "product_url_template",
+  "show_prices_to_guests",
+  "max_history_messages",
+  "max_tool_rounds",
+  "rag_section",
+  "enable_rag",
+  "embedding_provider",
+  "embedding_api_key",
+  "embedding_model",
+  "embedding_base_url",
+  "column_break_rag",
+  "embedding_dimensions",
+  "knowledge_results",
+  "rag_status_html",
+  "rebuild_index_button",
+  "security_section",
+  "rate_limit_per_hour",
+  "max_message_length",
+  "column_break_security",
+  "save_conversations"
+ ],
+ "fields": [
+  {
+   "fieldname": "general_section",
+   "fieldtype": "Section Break",
+   "label": "General"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enable Chatbot"
+  },
+  {
+   "default": "Shopping Assistant",
+   "fieldname": "bot_name",
+   "fieldtype": "Data",
+   "label": "Bot Name"
+  },
+  {
+   "description": "Used when the website does not send a company. Falls back to Cotton Valley.",
+   "fieldname": "default_company",
+   "fieldtype": "Link",
+   "label": "Default Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "column_break_general",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Hi! I can help you with products, orders, delivery, returns and store policies. How can I help you today?",
+   "fieldname": "welcome_message",
+   "fieldtype": "Small Text",
+   "label": "Welcome Message"
+  },
+  {
+   "description": "One question per line. Shown as quick-reply buttons in the chat widget.",
+   "fieldname": "suggested_questions",
+   "fieldtype": "Small Text",
+   "label": "Suggested Questions"
+  },
+  {
+   "fieldname": "llm_section",
+   "fieldtype": "Section Break",
+   "label": "LLM Provider"
+  },
+  {
+   "default": "Anthropic",
+   "fieldname": "provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "options": "OpenAI\nAnthropic\nGoogle Gemini\nOpenAI Compatible",
+   "reqd": 1
+  },
+  {
+   "description": "Stored encrypted. Never sent to the website.",
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key",
+   "length": 512
+  },
+  {
+   "default": "claude-opus-5-5",
+   "description": "Pick from the models your API key can use (loaded automatically after you enter the key), or type a model ID. Anthropic: claude-opus-5-5 is the most capable; claude-sonnet-5-5 and claude-haiku-4-5 are cheaper and faster.",
+   "fieldname": "model",
+   "fieldtype": "Autocomplete",
+   "label": "Model",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.provider=='OpenAI Compatible'",
+   "description": "For Groq, DeepSeek, OpenRouter, Ollama, etc. e.g. https://api.groq.com/openai/v1",
+   "fieldname": "base_url",
+   "fieldtype": "Data",
+   "label": "Base URL",
+   "mandatory_depends_on": "eval:doc.provider=='OpenAI Compatible'"
+  },
+  {
+   "fieldname": "column_break_llm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "4096",
+   "description": "Upper limit for one reply. On Claude models, thinking also counts toward this limit.",
+   "fieldname": "max_tokens",
+   "fieldtype": "Int",
+   "label": "Max Output Tokens",
+   "non_negative": 1
+  },
+  {
+   "default": "low",
+   "depends_on": "eval:doc.provider=='Anthropic'",
+   "description": "How much the model thinks before answering. Low is fast and cheap and is usually enough for store support.",
+   "fieldname": "effort",
+   "fieldtype": "Select",
+   "label": "Effort (Claude)",
+   "options": "\nlow\nmedium\nhigh"
+  },
+  {
+   "default": "60",
+   "fieldname": "request_timeout",
+   "fieldtype": "Int",
+   "label": "Request Timeout (seconds)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "test_connection_button",
+   "fieldtype": "Button",
+   "label": "Test Connection"
+  },
+  {
+   "fieldname": "behaviour_section",
+   "fieldtype": "Section Break",
+   "label": "Behaviour"
+  },
+  {
+   "description": "Extra instructions for the assistant, e.g. tone of voice, what to recommend, things to never say.",
+   "fieldname": "custom_instructions",
+   "fieldtype": "Long Text",
+   "label": "Custom Instructions"
+  },
+  {
+   "default": "Sorry, I'm having trouble answering right now. Please try again in a moment or contact our support team.",
+   "description": "Shown to the customer when the LLM call fails.",
+   "fieldname": "fallback_message",
+   "fieldtype": "Small Text",
+   "label": "Fallback Message"
+  },
+  {
+   "fieldname": "column_break_behaviour",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Link the bot uses for products. Use {slug} as placeholder, e.g. https://cottonvalley.com/product/{slug}",
+   "fieldname": "product_url_template",
+   "fieldtype": "Data",
+   "label": "Product URL Template"
+  },
+  {
+   "default": "0",
+   "description": "If unchecked, guests are asked to log in to see prices (same as the website listing).",
+   "fieldname": "show_prices_to_guests",
+   "fieldtype": "Check",
+   "label": "Show Retail Prices to Guests"
+  },
+  {
+   "default": "10",
+   "description": "Previous messages sent to the LLM as context.",
+   "fieldname": "max_history_messages",
+   "fieldtype": "Int",
+   "label": "Max History Messages",
+   "non_negative": 1
+  },
+  {
+   "default": "5",
+   "description": "How many times the bot may look up data (products, policies, orders) for one question.",
+   "fieldname": "max_tool_rounds",
+   "fieldtype": "Int",
+   "label": "Max Tool Rounds",
+   "non_negative": 1
+  },
+  {
+   "description": "Finds products and answers by meaning, not just exact words, so typos, synonyms and other languages work. Needs an embeddings API key (Anthropic has no embeddings API, so use OpenAI, Gemini, Voyage AI or a local Ollama server).",
+   "fieldname": "rag_section",
+   "fieldtype": "Section Break",
+   "label": "Semantic Search (RAG)"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_rag",
+   "fieldtype": "Check",
+   "label": "Enable Semantic Search"
+  },
+  {
+   "default": "OpenAI",
+   "depends_on": "eval:doc.enable_rag",
+   "fieldname": "embedding_provider",
+   "fieldtype": "Select",
+   "label": "Embedding Provider",
+   "mandatory_depends_on": "eval:doc.enable_rag",
+   "options": "OpenAI\nGoogle Gemini\nVoyage AI\nOpenAI Compatible"
+  },
+  {
+   "depends_on": "eval:doc.enable_rag",
+   "description": "Leave empty to reuse the chat API key when both use the same provider.",
+   "fieldname": "embedding_api_key",
+   "fieldtype": "Password",
+   "label": "Embedding API Key",
+   "length": 512
+  },
+  {
+   "default": "text-embedding-3-small",
+   "depends_on": "eval:doc.enable_rag",
+   "description": "OpenAI: text-embedding-3-small. Gemini: gemini-embedding-001. Voyage AI: voyage-3.5. Ollama: nomic-embed-text.",
+   "fieldname": "embedding_model",
+   "fieldtype": "Data",
+   "label": "Embedding Model",
+   "mandatory_depends_on": "eval:doc.enable_rag"
+  },
+  {
+   "depends_on": "eval:doc.enable_rag && doc.embedding_provider=='OpenAI Compatible'",
+   "description": "e.g. http://localhost:11434/v1 for Ollama",
+   "fieldname": "embedding_base_url",
+   "fieldtype": "Data",
+   "label": "Embedding Base URL",
+   "mandatory_depends_on": "eval:doc.enable_rag && doc.embedding_provider=='OpenAI Compatible'"
+  },
+  {
+   "fieldname": "column_break_rag",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "512",
+   "depends_on": "eval:doc.enable_rag",
+   "description": "Smaller vectors use less memory and search faster. 512 (OpenAI), 768 (Gemini), 1024 (Voyage). Set 0 to use the model's default (needed for most local models).",
+   "fieldname": "embedding_dimensions",
+   "fieldtype": "Int",
+   "label": "Embedding Dimensions",
+   "non_negative": 1
+  },
+  {
+   "default": "4",
+   "depends_on": "eval:doc.enable_rag",
+   "description": "How many FAQ / policy / store page passages are given to the bot with each question.",
+   "fieldname": "knowledge_results",
+   "fieldtype": "Int",
+   "label": "Knowledge Snippets per Question",
+   "non_negative": 1
+  },
+  {
+   "depends_on": "eval:doc.enable_rag",
+   "fieldname": "rag_status_html",
+   "fieldtype": "HTML",
+   "label": "Index Status"
+  },
+  {
+   "depends_on": "eval:doc.enable_rag",
+   "fieldname": "rebuild_index_button",
+   "fieldtype": "Button",
+   "label": "Rebuild Index"
+  },
+  {
+   "fieldname": "security_section",
+   "fieldtype": "Section Break",
+   "label": "Limits & Logging"
+  },
+  {
+   "default": "60",
+   "fieldname": "rate_limit_per_hour",
+   "fieldtype": "Int",
+   "label": "Messages per Hour (per IP)",
+   "non_negative": 1
+  },
+  {
+   "default": "1000",
+   "fieldname": "max_message_length",
+   "fieldtype": "Int",
+   "label": "Max Message Length (characters)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_security",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "save_conversations",
+   "fieldtype": "Check",
+   "label": "Save Conversations"
+  }
+ ],
+ "grid_page_length": 50,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-07 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat Bridge",
+ "name": "Chatbot Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
