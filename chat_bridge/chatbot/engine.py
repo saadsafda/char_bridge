@@ -10,6 +10,16 @@ from chat_bridge.chatbot.tools import ChatContext, get_tool_definitions, run_too
 
 MAX_FAQ_CHARS = 15000
 MAX_TOOL_RESULT_CHARS = 20000
+MAX_TRANSCRIPT_CHARS = 100000
+SUMMARY_PROMPT = """You summarize customer support chats between a store's chatbot and a customer, for the store's staff.
+
+Write a short summary in plain text (no markdown), in English, covering:
+- What the customer wanted
+- Products, orders or policies discussed
+- What the chatbot answered and whether the customer's need was met
+- Any follow-up the staff should do (unanswered questions, complaints, purchase intent)
+
+Leave out anything not in the chat. Keep it under 150 words."""
 REFUSAL_REPLY = "Sorry, I can't help with that. Is there anything about our products, orders or store policies I can help with?"
 
 
@@ -71,6 +81,30 @@ def run_turn(settings, message, company, customer=None, session_id=None, guest=N
 		"products": _products_in_reply(ctx, reply),
 		"error": error,
 	}
+
+
+def summarize_conversation(conversation):
+	"""LLM summary of the whole chat, for staff reviewing the conversation."""
+	lines = [
+		f"{'Customer' if m.role == 'user' else 'Chatbot'}: {m.content}"
+		for m in conversation.messages
+		if m.role in ("user", "assistant") and m.content
+	]
+	if not lines:
+		frappe.throw(frappe._("This conversation has no messages to summarize."))
+	# Very long chats keep their most recent part.
+	transcript = "\n\n".join(lines)[-MAX_TRANSCRIPT_CHARS:]
+
+	provider = get_provider(get_settings())
+	provider.start(SUMMARY_PROMPT, [{"role": "user", "content": f"<chat>\n{transcript}\n</chat>"}])
+	try:
+		response = provider.complete(tools=None)
+	except LLMError as e:
+		frappe.log_error(title="Chatbot summary error", message=str(e))
+		frappe.throw(frappe._("Could not generate the summary: {0}").format(e))
+	if response.refused or not response.text.strip():
+		frappe.throw(frappe._("The AI model did not return a summary. Please try again."))
+	return response.text.strip()
 
 
 def build_system_prompt(settings, ctx, include_faq=True):
