@@ -10,8 +10,16 @@
   "customer",
   "column_break_conv",
   "ip_address",
+  "country",
+  "city",
   "message_count",
   "last_message_at",
+  "guest_section",
+  "guest_name",
+  "guest_email",
+  "column_break_guest",
+  "guest_phone",
+  "guest_company",
   "messages_section",
   "messages"
  ],
@@ -52,6 +60,19 @@
    "read_only": 1
   },
   {
+   "fieldname": "country",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Country",
+   "read_only": 1
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City",
+   "read_only": 1
+  },
+  {
    "fieldname": "message_count",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -63,6 +84,44 @@
    "fieldtype": "Datetime",
    "in_list_view": 1,
    "label": "Last Message At",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.guest_name || doc.guest_email",
+   "fieldname": "guest_section",
+   "fieldtype": "Section Break",
+   "label": "Guest Details"
+  },
+  {
+   "fieldname": "guest_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Guest Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "guest_email",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Guest Email",
+   "options": "Email",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_guest",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "guest_phone",
+   "fieldtype": "Data",
+   "label": "Guest Phone",
+   "options": "Phone",
+   "read_only": 1
+  },
+  {
+   "fieldname": "guest_company",
+   "fieldtype": "Data",
+   "label": "Guest Company",
    "read_only": 1
   },
   {
@@ -81,7 +140,7 @@
  "grid_page_length": 50,
  "in_create": 1,
  "links": [],
- "modified": "2026-10-07 10:00:00.000000",
+ "modified": "2026-10-13 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "Chat Bridge",
  "name": "Chatbot Conversation",
@@ -97,6 +156,7 @@
   }
  ],
  "row_format": "Dynamic",
+ "search_fields": "guest_name,guest_email,guest_phone,guest_company",
  "sort_field": "last_message_at",
  "sort_order": "DESC",
  "states": []

@@ -17,7 +17,7 @@ def get_settings():
 	return frappe.get_cached_doc("Chatbot Settings")
 
 
-def run_turn(settings, message, company, customer=None, session_id=None):
+def run_turn(settings, message, company, customer=None, session_id=None, guest=None):
 	ctx = ChatContext(company=company, customer=customer, settings=settings)
 	conversation = _get_conversation(session_id, company, customer) if session_id else None
 	history = _get_history(conversation, cint(settings.max_history_messages) or 10)
@@ -60,7 +60,7 @@ def run_turn(settings, message, company, customer=None, session_id=None):
 		reply, error = settings.fallback_message, True
 
 	if settings.save_conversations:
-		conversation = _save_turn(conversation, session_id, company, customer, message, reply, tools_used)
+		conversation = _save_turn(conversation, session_id, company, customer, message, reply, tools_used, guest)
 		session_id = conversation.session_id
 	elif not session_id:
 		session_id = frappe.generate_hash(length=32)
@@ -210,15 +210,18 @@ def _get_history(conversation, limit):
 	return [{"role": m.role, "content": m.content} for m in rows]
 
 
-def _save_turn(conversation, session_id, company, customer, message, reply, tools_used):
+def _save_turn(conversation, session_id, company, customer, message, reply, tools_used, guest=None):
 	if not conversation:
 		conversation = frappe.new_doc("Chatbot Conversation")
 		# Never reuse a session id the caller supplied but we could not match; issue a fresh one.
 		conversation.session_id = frappe.generate_hash(length=32)
 		conversation.company = company
 		conversation.ip_address = frappe.local.request_ip
+		conversation.country, conversation.city = _get_location(conversation.ip_address)
 	if customer and not conversation.customer:
 		conversation.customer = customer
+	if guest:
+		conversation.update(guest)
 
 	now = now_datetime()
 	conversation.append("messages", {"role": "user", "content": message, "timestamp": now})
@@ -236,6 +239,18 @@ def _save_turn(conversation, session_id, company, customer, message, reply, tool
 	conversation.flags.ignore_permissions = True
 	conversation.save()
 	return conversation
+
+
+def _get_location(ip_address):
+	"""(country, city) for an IP from the offline GeoLite2 database bundled with Frappe."""
+	from frappe.sessions import get_geo_from_ip
+
+	geo = get_geo_from_ip(ip_address) if ip_address else None
+	if not geo:
+		return None, None
+	country = (geo.get("country") or {}).get("names", {}).get("en")
+	city = (geo.get("city") or {}).get("names", {}).get("en")
+	return country, city
 
 
 def _products_in_reply(ctx, reply):

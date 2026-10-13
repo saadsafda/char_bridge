@@ -27,6 +27,7 @@
   "column_break_behaviour",
   "product_url_template",
   "show_prices_to_guests",
+  "require_guest_details",
   "max_history_messages",
   "max_tool_rounds",
   "rag_section",
@@ -192,6 +193,13 @@
    "label": "Show Retail Prices to Guests"
   },
   {
+   "default": "1",
+   "description": "Guests must enter their name, email, phone and company before chatting. They are saved on the Chatbot Conversation.",
+   "fieldname": "require_guest_details",
+   "fieldtype": "Check",
+   "label": "Require Guest Details"
+  },
+  {
    "default": "10",
    "description": "Previous messages sent to the LLM as context.",
    "fieldname": "max_history_messages",
@@ -320,7 +328,7 @@
  "grid_page_length": 50,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-07 14:00:00.000000",
+ "modified": "2026-10-13 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Chat Bridge",
  "name": "Chatbot Settings",

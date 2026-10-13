@@ -17,7 +17,7 @@ import hashlib
 import frappe
 from frappe import _
 from frappe.rate_limiter import rate_limit
-from frappe.utils import cint
+from frappe.utils import cint, validate_email_address, validate_phone_number
 
 from chat_bridge.chatbot import rag
 from chat_bridge.chatbot.engine import get_settings, run_turn
@@ -39,12 +39,21 @@ def get_config(company=None):
 			q.strip() for q in (settings.suggested_questions or "").splitlines() if q.strip()
 		],
 		"max_message_length": cint(settings.max_message_length) or 1000,
+		"require_guest_details": bool(settings.require_guest_details),
 	}
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(limit=_rate_limit_per_hour, seconds=60 * 60)
-def send_message(message, session_id=None, company=None):
+def send_message(
+	message,
+	session_id=None,
+	company=None,
+	guest_name=None,
+	guest_email=None,
+	guest_phone=None,
+	guest_company=None,
+):
 	settings = get_settings()
 	if not settings.enabled:
 		frappe.throw(_("The chatbot is currently unavailable."), frappe.ValidationError)
@@ -56,12 +65,19 @@ def send_message(message, session_id=None, company=None):
 	if len(message) > max_length:
 		frappe.throw(_("Message is too long. Please keep it under {0} characters.").format(max_length))
 
+	customer = _get_customer()
+	session_id = _clean_session_id(session_id)
+	guest = None if customer else _clean_guest_details(guest_name, guest_email, guest_phone, guest_company)
+	if not customer and not guest and settings.require_guest_details and not _has_guest_details(session_id):
+		frappe.throw(_("Please enter your name, email, phone and company to start chatting."))
+
 	return run_turn(
 		settings,
 		message=message,
 		company=_resolve_company(company, settings),
-		customer=_get_customer(),
-		session_id=_clean_session_id(session_id),
+		customer=customer,
+		session_id=session_id,
+		guest=guest,
 	)
 
 
@@ -174,6 +190,32 @@ def _get_customer():
 	if not check_customer_token():
 		return None
 	return get_customer_from_token()
+
+
+def _clean_guest_details(name, email, phone, company):
+	"""Validated contact details a guest entered in the chat widget, or None if none were sent."""
+	details = {
+		"guest_name": (name or "").strip()[:140],
+		"guest_email": (email or "").strip()[:140],
+		"guest_phone": (phone or "").strip()[:30],
+		"guest_company": (company or "").strip()[:140],
+	}
+	if not any(details.values()):
+		return None
+	if not all(details.values()):
+		frappe.throw(_("Please enter your name, email, phone and company."))
+	if not validate_email_address(details["guest_email"]):
+		frappe.throw(_("Please enter a valid email address."))
+	if not validate_phone_number(details["guest_phone"]) or sum(c.isdigit() for c in details["guest_phone"]) < 7:
+		frappe.throw(_("Please enter a valid phone number."))
+	return details
+
+
+def _has_guest_details(session_id):
+	"""True if this guest already gave their details earlier in the conversation."""
+	return bool(
+		session_id and frappe.db.get_value("Chatbot Conversation", {"session_id": session_id}, "guest_email")
+	)
 
 
 def _clean_session_id(session_id):
